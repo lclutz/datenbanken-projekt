@@ -8,11 +8,37 @@ import java.sql.SQLException;
  * Wraps interaction with the SQL database for storing and retrieving game data
  */
 public class Db {
+
+	static final String[] MIGRATIONS = {
+		"""
+		CREATE TABLE "Games" (
+		   "ID"    INTEGER NOT NULL UNIQUE,
+		   PRIMARY KEY('ID' AUTOINCREMENT)
+		)
+		""",
+		
+		"""
+		CREATE TABLE "Players" (
+		   "ID"    INTEGER NOT NULL UNIQUE,
+		   PRIMARY KEY("ID" AUTOINCREMENT)
+		)
+		""",
+		
+		"""
+		CREATE TABLE "Rolls" (
+		   "ID"     INTEGER NOT NULL UNIQUE,
+		   "Value"  INTEGER NOT NULL,
+		   "Game"   INTEGER NOT NULL,
+		   "Player" INTEGER NOT NULL,
+		   "Date"   DATE NOT NULL,
+		   PRIMARY  KEY("ID" AUTOINCREMENT),
+		   FOREIGN  KEY (Game) REFERENCES Games(ID),
+		   FOREIGN  KEY (PLAYER) REFERENCES Players(ID)
+		)
+		"""
+	};
+
 	static final String QUERY = "SELECT id, first, last, age FROM Employees";
-	static final String SCHEMA = 
-			"CREATE SCHEMA DICE_GAME" +
-			"    CREATE TABLE DiceRolls (value int);" +
-			"GO";
 
 	private final String dbUrl;
 	private final String username;
