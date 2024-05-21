@@ -1,18 +1,14 @@
 package de.karlsruhe.hhs.lbt9;
 
+import java.sql.SQLException;
+
 public class Main {
 
-	public static void main(String[] args) {
-
-		final String DB_URL = "jdbc:h2:mem:DICE_GAME";
+	public static void main(String[] args) throws SQLException {
+		final String DB_URL = "jdbc:sqlite:dice_game.sqlite3";
 		final String USERNAME = "";
 		final String PASSWORD = "";
 		Db db = new Db(DB_URL, USERNAME, PASSWORD);
-
-		if (!db.connect()) {
-			System.err.println("Failed to connect to databse. Aborting.");
-			return;
-		}
 
 		final int SIDES = 6;
 		final long SEED = 0;
@@ -26,9 +22,9 @@ public class Main {
 		while (!gameFinished) {
 			game.play(dice);
 			System.out.println(game);
+			db.save(game);
 			gameFinished = game.finished();
 		}
-
 	}
 
 }

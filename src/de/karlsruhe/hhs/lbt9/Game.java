@@ -1,15 +1,19 @@
 package de.karlsruhe.hhs.lbt9;
 
+import java.time.LocalDateTime;
+
 public class Game {
 	
 	private final int players;
 	private final int rolls;
-	private int[][] gameMemory;
+	private int[][] diceRolls;
+	private LocalDateTime[][] diceRollDates;
 
 	Game(int players, int rolls) {
 		this.players = players;
 		this.rolls = rolls;
-		this.gameMemory = new int[this.players][this.rolls];
+		this.diceRolls = new int[this.players][this.rolls];
+		this.diceRollDates = new LocalDateTime[this.players][this.rolls];
 	}
 	
 	/**
@@ -32,10 +36,20 @@ public class Game {
 	 * Get a specific dice roll of a specific player
 	 * @param player Player index
 	 * @param roll Dice roll index
-	 * @return dice roll value
+	 * @return Dice roll value
 	 */
 	public int getRoll(int player, int roll) {
-		return this.gameMemory[player][roll];
+		return this.diceRolls[player][roll];
+	}
+	
+	/**
+	 * Get the date of a dice roll of a specific player
+	 * @param player Player index
+	 * @param roll Dice roll index
+	 * @return Date when the dice roll happened
+	 */
+	public LocalDateTime getRollDate(int player, int roll) {
+		return this.diceRollDates[player][roll];
 	}
 	
 	/**
@@ -56,7 +70,8 @@ public class Game {
 			return false;
 		}
 		
-		this.gameMemory[player][roll] = value;
+		this.diceRolls[player][roll] = value;
+		this.diceRollDates[player][roll] = LocalDateTime.now();
 		return true;
 	}
 	
@@ -65,9 +80,9 @@ public class Game {
 	 * @param dice Dice to roll
 	 */
 	public void play(Dice dice) {
-		for (var player : this.gameMemory) {
-			for (int i = 0; i < player.length; i++) {
-				player[i] = dice.roll();
+		for (int player = 0; player < this.players; ++player) {
+			for (int roll = 0; roll < this.rolls; ++roll) {
+				this.setRoll(player, roll, dice.roll());
 			}
 		}
 	}
@@ -77,7 +92,7 @@ public class Game {
 	 * @return true if all the sums are even otherwise false
 	 */
 	boolean finished() {
-		for (var playerRolls : gameMemory) {
+		for (var playerRolls : diceRolls) {
 			int sum = 0;
 			for (var playerRoll : playerRolls) {
 				sum += playerRoll;
@@ -94,7 +109,7 @@ public class Game {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("Game {\n");
-		for (var player : this.gameMemory) {
+		for (var player : this.diceRolls) {
 			int sum = 0;
 			sb.append("\tPlayer").append("[");
 			for (var diceRoll : player) {				
