@@ -25,6 +25,19 @@ public class Main {
 			db.save(game);
 			gameFinished = game.finished();
 		}
+		
+		for (int i = 0; i < 1000; ++i) {
+			game.play(dice);
+			db.save(game);
+		}
+
+		for (int playerId = 0; playerId < PLAYERS; ++playerId) {
+			System.out.println("Average roll for player " + playerId + ": " + db.getAverageRoll(playerId));
+		}
+		
+		for (int playerId = 0; playerId < PLAYERS; ++playerId) {
+			System.out.println("Total sum of rolls for player " + playerId + ": " + db.getSumOfAllRolls(playerId));
+		}
 	}
 
 }

@@ -10,42 +10,40 @@ import java.sql.Timestamp;
  */
 public class Db {
 
-	private static final String[] MIGRATIONS = {
-		"""
-		CREATE TABLE "metadata" (
-		   "id"        INTEGER NOT NULL UNIQUE,
-		   "migration" INTEGER NOT NULL,
-		   PRIMARY     KEY("id")
-		)
-		""",
-			
-		"""
-		CREATE TABLE "games" (
-		   "id"    INTEGER NOT NULL UNIQUE,
-		   PRIMARY KEY("id" AUTOINCREMENT)
-		)
-		""",
-		
-		"""
-		CREATE TABLE "players" (
-		   "id"    INTEGER NOT NULL UNIQUE,
-		   PRIMARY KEY("id" AUTOINCREMENT)
-		)
-		""",
-		
-		"""
-		CREATE TABLE "rolls" (
-		   "id"         INTEGER NOT NULL UNIQUE,
-		   "value"      INTEGER NOT NULL,
-		   "game"       INTEGER NOT NULL,
-		   "player"     INTEGER NOT NULL,
-		   "created_at" TIMESTAMP NOT NULL,
-		   PRIMARY      KEY("id" AUTOINCREMENT),
-		   FOREIGN      KEY (game) REFERENCES games(id),
-		   FOREIGN      KEY (player) REFERENCES players(id)
-		)
-		"""
-	};
+	private static final String[] MIGRATIONS = { """
+			CREATE TABLE "metadata" (
+			   "id"        INTEGER NOT NULL UNIQUE,
+			   "migration" INTEGER NOT NULL,
+			   PRIMARY     KEY("id")
+			)
+			""",
+
+			"""
+					CREATE TABLE "games" (
+					   "id"    INTEGER NOT NULL UNIQUE,
+					   PRIMARY KEY("id" AUTOINCREMENT)
+					)
+					""",
+
+			"""
+					CREATE TABLE "players" (
+					   "id"    INTEGER NOT NULL UNIQUE,
+					   PRIMARY KEY("id" AUTOINCREMENT)
+					)
+					""",
+
+			"""
+					CREATE TABLE "rolls" (
+					   "id"         INTEGER NOT NULL UNIQUE,
+					   "value"      INTEGER NOT NULL,
+					   "game"       INTEGER NOT NULL,
+					   "player"     INTEGER NOT NULL,
+					   "created_at" TIMESTAMP NOT NULL,
+					   PRIMARY      KEY("id" AUTOINCREMENT),
+					   FOREIGN      KEY (game) REFERENCES games(id),
+					   FOREIGN      KEY (player) REFERENCES players(id)
+					)
+					""" };
 
 	private Connection connection;
 
@@ -56,23 +54,25 @@ public class Db {
 
 	/**
 	 * Get next migration index out of the metadata table
+	 * 
 	 * @return Next migration index to apply or 0 if no metadata table is found
 	 * @throws SQLException
 	 */
 	private int getNextMigrationIndex() throws SQLException {
 		var meta = this.connection.getMetaData();
-		var resultSet = meta.getTables(null, null, "metadata", new String[] {"TABLE"});
+		var resultSet = meta.getTables(null, null, "metadata", new String[] { "TABLE" });
 		if (!resultSet.next()) {
 			return 0;
 		}
-		
+
 		var statement = this.connection.createStatement();
 		resultSet = statement.executeQuery("SELECT migration FROM metadata WHERE id = 0 LIMIT 1");
 		return resultSet.getInt(1);
 	}
-	
+
 	/**
 	 * Store next migration index in the metadata table
+	 * 
 	 * @param value Next migration index
 	 * @throws SQLException
 	 */
@@ -83,7 +83,36 @@ public class Db {
 	}
 
 	/**
+	 * Get average dice roll value for a player by ID
+	 * @param playerId Player ID
+	 * @return Average dice roll value
+	 * @throws SQLException
+	 */
+	public double getAverageRoll(int playerId) throws SQLException {
+		final var playerAverageQuery = "SELECT AVG(value) from rolls where player = ?";
+		var preparedStatement = this.connection.prepareStatement(playerAverageQuery);
+		preparedStatement.setInt(1, playerId);
+		final var resultSet = preparedStatement.executeQuery();
+		return resultSet.getDouble(1);
+	}
+
+	/**
+	 * Get the sum of all dice rolls for a player by ID
+	 * @param playerId Player ID
+	 * @return Sum of all dice rolls by that player
+	 * @throws SQLException
+	 */
+	public long getSumOfAllRolls(int playerId) throws SQLException {
+		final var playerSumQuery = "SELECT SUM(value) from rolls where player = ?";
+		var preparedStatement = this.connection.prepareStatement(playerSumQuery);
+		preparedStatement.setInt(1, playerId);
+		final var resultSet = preparedStatement.executeQuery();
+		return resultSet.getLong(1);
+	}
+
+	/**
 	 * Apply database migrations
+	 * 
 	 * @param startIndex Index from which to start the migration
 	 * @return true in case of success, false otherwise
 	 * @throws SQLException
@@ -106,14 +135,15 @@ public class Db {
 			this.connection.setAutoCommit(previousAutoCommitMode);
 		}
 	}
-	
+
 	private int newGame() throws SQLException {
 		var statement = this.connection.createStatement();
 		return 0;
 	}
-	
+
 	/**
 	 * Saves a game state to the database
+	 * 
 	 * @param game Game to save
 	 */
 	public void save(Game game) throws SQLException {
